@@ -1,5 +1,6 @@
 Flask
 flask-cors
-PyPDF2
+pypdf
 reportlab
+python-dotenv
 gunicorn
