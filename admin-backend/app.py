@@ -363,30 +363,21 @@ def generate_pdf():
         # ======================================
         # SAVE OUTPUT
         # ======================================
+        pdf_buffer = io.BytesIO()
 
-        output_path = os.path.join(
-            BASE_DIR,
-            "Generated_Offer_Letter.pdf"
-        )
+        output.write(pdf_buffer)
 
-        with open(
-            output_path,
-            "wb"
-        ) as outputStream:
-
-            output.write(outputStream)
-
-        # ======================================
-        # RETURN PDF
-        # ======================================
+        pdf_buffer.seek(0)
 
         return send_file(
 
-            output_path,
+            pdf_buffer,
 
             as_attachment=True,
 
-            download_name="OfferLetter.pdf"
+            download_name="OfferLetter.pdf",
+
+            mimetype="application/pdf"
 
         )
 
