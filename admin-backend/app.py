@@ -18,7 +18,15 @@ from pypdf import (
 )
 
 from reportlab.pdfgen import canvas
+
 from dotenv import load_dotenv
+
+# ======================================
+# LOAD ENV
+# ======================================
+
+load_dotenv()
+
 # ======================================
 # FLASK APP
 # ======================================
@@ -27,13 +35,27 @@ app = Flask(__name__)
 
 CORS(app)
 
-load_dotenv()
 # ======================================
-# ADMIN LOGIN
+# ENV VARIABLES
 # ======================================
 
-ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+ADMIN_USERNAME = os.getenv(
+    "ADMIN_USERNAME",
+    "admin"
+)
+
+ADMIN_PASSWORD = os.getenv(
+    "ADMIN_PASSWORD",
+    "admin123"
+)
+
+# ======================================
+# BASE DIRECTORY
+# ======================================
+
+BASE_DIR = os.path.dirname(
+    os.path.abspath(__file__)
+)
 
 # ======================================
 # HOME
@@ -42,13 +64,19 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 @app.route("/")
 def home():
 
-    return "Flask Backend Running"
+    return jsonify({
+        "success": True,
+        "message": "Flask Backend Running"
+    })
 
 # ======================================
-# ADMIN LOGIN API
+# ADMIN LOGIN
 # ======================================
 
-@app.route("/admin-login", methods=["POST"])
+@app.route(
+    "/admin-login",
+    methods=["POST"]
+)
 def admin_login():
 
     try:
@@ -72,38 +100,45 @@ def admin_login():
         ):
 
             return jsonify({
+
                 "success": True,
+
                 "message": "Login Successful"
+
             })
 
         return jsonify({
+
             "success": False,
-            "message": "Invalid Username or Password"
+
+            "message":
+            "Invalid Username or Password"
+
         })
 
     except Exception as e:
 
         return jsonify({
+
             "success": False,
+
             "error": str(e)
+
         }), 500
 
 # ======================================
-# PDF GENERATION API
+# GENERATE PDF
 # ======================================
 
-@app.route("/generate-pdf", methods=["POST"])
+@app.route(
+    "/generate-pdf",
+    methods=["POST"]
+)
 def generate_pdf():
 
     try:
 
-        # ======================================
-        # GET JSON DATA
-        # ======================================
-
         data = request.get_json()
-
-        print("Received Data :", data)
 
         # ======================================
         # GET VALUES
@@ -138,17 +173,21 @@ def generate_pdf():
         # ======================================
 
         if (
-            ref_id == "" or
-            candidate_name == "" or
-            email_id == "" or
-            college_name == "" or
-            start_date_raw == "" or
-            end_date_raw == ""
+            not ref_id or
+            not candidate_name or
+            not email_id or
+            not college_name or
+            not start_date_raw or
+            not end_date_raw
         ):
 
             return jsonify({
+
                 "success": False,
-                "message": "All Fields Required"
+
+                "message":
+                "All Fields Required"
+
             }), 400
 
         # ======================================
@@ -170,27 +209,29 @@ def generate_pdf():
         )
 
         # ======================================
-        # LOAD PDF TEMPLATE
+        # TEMPLATE PDF
         # ======================================
 
-        BASE_DIR = os.path.dirname(
-            os.path.abspath(__file__)
-        )
-
-        pdf_path = os.path.join(
+        template_path = os.path.join(
             BASE_DIR,
             "OfferLetter.pdf"
         )
 
-        if not os.path.exists(pdf_path):
+        if not os.path.exists(
+            template_path
+        ):
 
             return jsonify({
+
                 "success": False,
-                "message": "OfferLetter.pdf Not Found"
+
+                "message":
+                "OfferLetter.pdf Not Found"
+
             }), 404
 
         existing_pdf = PdfReader(
-            open(pdf_path, "rb")
+            template_path
         )
 
         output = PdfWriter()
@@ -239,7 +280,7 @@ def generate_pdf():
         )
 
         # ======================================
-        # EMAIL
+        # EMAIL + COLLEGE
         # ======================================
 
         can.setFont(
@@ -248,17 +289,16 @@ def generate_pdf():
         )
 
         can.drawString(
-            72,590, candidate_name
+            72,
+            590,
+            candidate_name
         )
+
         can.drawString(
             72,
             570,
             email_id
         )
-
-        # ======================================
-        # COLLEGE NAME
-        # ======================================
 
         can.drawString(
             72,
@@ -267,7 +307,7 @@ def generate_pdf():
         )
 
         # ======================================
-        # START DATE
+        # START / END DATE
         # ======================================
 
         can.setFont(
@@ -281,25 +321,19 @@ def generate_pdf():
             start_date
         )
 
-        # ======================================
-        # END DATE
-        # ======================================
-
         can.drawString(
             458,
             395,
             end_date
         )
 
-        # ======================================
-        # SAVE OVERLAY
-        # ======================================
-
         can.save()
 
         packet.seek(0)
 
-        overlay_pdf = PdfReader(packet)
+        overlay_pdf = PdfReader(
+            packet
+        )
 
         # ======================================
         # MERGE FIRST PAGE
@@ -314,7 +348,7 @@ def generate_pdf():
         output.add_page(first_page)
 
         # ======================================
-        # ADD REMAINING PAGES
+        # REMAINING PAGES
         # ======================================
 
         for page_num in range(
@@ -327,17 +361,13 @@ def generate_pdf():
             )
 
         # ======================================
-        # OUTPUT PDF PATH
+        # SAVE OUTPUT
         # ======================================
 
         output_path = os.path.join(
             BASE_DIR,
             "Generated_Offer_Letter.pdf"
         )
-
-        # ======================================
-        # SAVE PDF
-        # ======================================
 
         with open(
             output_path,
@@ -351,24 +381,30 @@ def generate_pdf():
         # ======================================
 
         return send_file(
+
             output_path,
+
             as_attachment=True,
+
             download_name="OfferLetter.pdf"
+
         )
 
     except Exception as e:
 
-        print("ERROR :", e)
+        print("ERROR :", str(e))
 
         return jsonify({
+
             "success": False,
+
             "error": str(e)
+
         }), 500
 
-
-# ==============================
+# ======================================
 # VERIFY CERTIFICATE
-# ==============================
+# ======================================
 
 @app.route(
     "/verify-certificate",
@@ -376,31 +412,44 @@ def generate_pdf():
 )
 def verify_certificate():
 
-    data = request.get_json()
+    try:
 
-    ref_id = data.get("ref_id")
+        data = request.get_json()
 
-    # DEMO VALIDATION
+        ref_id = data.get(
+            "ref_id",
+            ""
+        )
 
-    if ref_id:
+        if ref_id:
+
+            return jsonify({
+
+                "success": True,
+
+                "ref_id": ref_id
+
+            })
 
         return jsonify({
 
-            "success": True,
-
-            "ref_id": ref_id
+            "success": False
 
         })
 
-    return jsonify({
+    except Exception as e:
 
-        "success": False
+        return jsonify({
 
-    })
+            "success": False,
 
-# ==============================
+            "error": str(e)
+
+        }), 500
+
+# ======================================
 # DOWNLOAD CERTIFICATE
-# ==============================
+# ======================================
 
 @app.route(
     "/download-certificate",
@@ -408,18 +457,55 @@ def verify_certificate():
 )
 def download_certificate():
 
-    return send_file(
+    try:
 
-        "Generated_Offer_Letter.pdf",
+        pdf_path = os.path.join(
+            BASE_DIR,
+            "Generated_Offer_Letter.pdf"
+        )
 
-        as_attachment=True
-    )
+        if not os.path.exists(
+            pdf_path
+        ):
+
+            return jsonify({
+
+                "success": False,
+
+                "message":
+                "Certificate Not Found"
+
+            }), 404
+
+        return send_file(
+
+            pdf_path,
+
+            as_attachment=True
+
+        )
+
+    except Exception as e:
+
+        return jsonify({
+
+            "success": False,
+
+            "error": str(e)
+
+        }), 500
+
 # ======================================
-# RUN APP
+# RUN
 # ======================================
 
 if __name__ == "__main__":
 
+    port = int(
+        os.environ.get("PORT", 5000)
+    )
+
     app.run(
-        debug=True
+        host="0.0.0.0",
+        port=port
     )
