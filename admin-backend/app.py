@@ -1,6 +1,6 @@
 import os
 import io
-
+import traceback
 from datetime import datetime
 
 from flask import (
@@ -116,7 +116,10 @@ def admin_login():
 
         })
 
+
     except Exception as e:
+
+        traceback.print_exc()
 
         return jsonify({
 
@@ -249,7 +252,7 @@ def generate_pdf():
         # ======================================
 
         can.setFont(
-            "Times-Bold",
+            "Helvetica-Bold",
             13
         )
 
@@ -284,7 +287,7 @@ def generate_pdf():
         # ======================================
 
         can.setFont(
-            "Times-Roman",
+            "Helvetica",
             14
         )
 
