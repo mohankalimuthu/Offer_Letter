@@ -453,13 +453,22 @@ def download_certificate():
 
     try:
 
-        pdf_path = os.path.join(
+        safe_ref_id = ref_id.replace(
+            "/",
+            "_"
+        )
+
+        output_path = os.path.join(
+
             BASE_DIR,
-            "Generated_Offer_Letter.pdf"
+
+            "certificates",
+
+            f"{safe_ref_id}.pdf"
         )
 
         if not os.path.exists(
-            pdf_path
+            safe_ref_id
         ):
 
             return jsonify({
@@ -473,7 +482,7 @@ def download_certificate():
 
         return send_file(
 
-            pdf_path,
+            safe_ref_id,
 
             as_attachment=True
 
